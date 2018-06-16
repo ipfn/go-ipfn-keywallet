@@ -62,7 +62,7 @@ func TestDerivePath(t *T) {
 	for index := uint32(0); index < 3; index++ {
 		path := fmt.Sprintf("m/44'/0'/123'/123/%d", index)
 		acc, _ := DerivePath(masterPrivKey, path)
-		addr, _ := acc.Address(&chaincfg.MainNetParams)
+		addr, _ := acc.BTCAddress(&chaincfg.MainNetParams)
 		assert.Equal(t, addr.String(), expected[index])
 	}
 
@@ -94,9 +94,11 @@ func TestDeriveEth(t *T) {
 	for index := uint32(0); index < 3; index++ {
 		path := fmt.Sprintf("m/44'/60'/7'/1/%d", index)
 		acc, _ := DerivePath(masterPrivKey, path)
-		pub, _ := acc.ECPubKey()
-		addr := pkhash.AddressEthereum(*pub.ToECDSA())
+		addr, _ := acc.Address()
 		assert.Equal(t, addr.String(), expected[index])
+		pub, _ := acc.ECPubKey()
+		c, _ := pkhash.PubkeyToCid(pub)
+		assert.Equal(t, addr.String(), pkhash.CidToAddress(c).String())
 	}
 }
 
@@ -120,8 +122,7 @@ func TestPKHash(t *T) {
 	for index := uint32(0); index < 3; index++ {
 		path := fmt.Sprintf("m/44'/2'/7'/1/%d", index)
 		acc, _ := DerivePath(masterPrivKey, path)
-		pub, _ := acc.ECPubKey()
-		addr, _ := pkhash.PKHash(pub, 0x89)
+		addr, _ := acc.PKHash(0x89)
 		assert.Equal(t, expected[index], addr.String())
 	}
 }

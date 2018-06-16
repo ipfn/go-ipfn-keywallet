@@ -20,11 +20,15 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/hdkeychain"
 
 	bip39 "github.com/ipfn/go-bip39"
 	keystore "github.com/ipfn/go-ipfn-keystore"
+	pkhash "github.com/ipfn/go-ipfn-pkhash"
 )
 
 // Wallet - Storage based key wallet.
@@ -105,6 +109,11 @@ type ExtendedKey struct {
 	*hdkeychain.ExtendedKey
 }
 
+// DerivePath - Derives extended path.
+func (key *ExtendedKey) DerivePath(path string) (*ExtendedKey, error) {
+	return DerivePath(key, path)
+}
+
 // Derive - Derives extended key child by adding 0x80000000 (2^31) to path.
 func (key *ExtendedKey) Derive(path uint32) (*ExtendedKey, error) {
 	return key.Child(hdkeychain.HardenedKeyStart + path)
@@ -117,4 +126,31 @@ func (key *ExtendedKey) Child(path uint32) (*ExtendedKey, error) {
 		return nil, err
 	}
 	return &ExtendedKey{ExtendedKey: k}, nil
+}
+
+// Address - Converts the extended key to a standard ethereum pay-to-pubkey-hash address.
+func (key *ExtendedKey) Address() (addr common.Address, err error) {
+	pub, err := key.ECPubKey()
+	if err != nil {
+		return
+	}
+	addr = pkhash.AddressEthereum(*pub.ToECDSA())
+	return
+}
+
+// BTCAddress - Converts the extended key to a standard bitcoin pay-to-pubkey-hash
+// address for the passed network.
+func (key *ExtendedKey) BTCAddress(net *chaincfg.Params) (*btcutil.AddressPubKeyHash, error) {
+	return key.ExtendedKey.Address(net)
+}
+
+// PKHash - Converts the extended key to a standard bitcoin pay-to-pubkey-hash
+// address for the passed network.
+func (key *ExtendedKey) PKHash(netID byte) (addr *btcutil.AddressPubKeyHash, err error) {
+	pub, err := key.ECPubKey()
+	if err != nil {
+		return
+	}
+	addr, err = pkhash.PKHash(pub, netID)
+	return
 }

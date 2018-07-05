@@ -18,7 +18,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/ipfn/ipfn/go/keypair"
+	"github.com/ipfn/go-ipfn-keypair"
 	prompt "github.com/segmentio/go-prompt"
 )
 

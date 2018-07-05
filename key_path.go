@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ipfn/ipfn/go/keypair"
+	"github.com/ipfn/go-ipfn-keypair"
 )
 
 // KeyPath - Wallet key path.
@@ -64,6 +64,11 @@ func (path *KeyPath) IsHashPath() bool {
 	return strings.HasPrefix(path.DerivationPath, "x/")
 }
 
+// HasPath - Returns true if derivation path is not empty.
+func (path *KeyPath) HasPath() bool {
+	return path.DerivationPath != ""
+}
+
 // String - Returns joined key path.
 func (path *KeyPath) String() string {
 	return strings.Join([]string{path.SeedName, path.DerivationPath}, "/")
@@ -94,7 +99,8 @@ func (path *KeyPath) UnmarshalJSON(data []byte) (err error) {
 
 func parseKeyPath(path string) (seed, res string, err error) {
 	if path == "" {
-		path = "default"
+		seed = "default"
+		return
 	}
 	if !strings.Contains(path, "/") {
 		seed = path

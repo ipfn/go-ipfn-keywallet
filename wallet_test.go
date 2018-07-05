@@ -22,8 +22,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	bip39 "github.com/ipfn/go-bip39"
-	"github.com/ipfn/ipfn/go/keypair"
-	"github.com/ipfn/ipfn/go/store"
+	"github.com/ipfn/go-ipfn-keypair"
+	"github.com/ipfn/go-ipfn-store"
 )
 
 var (

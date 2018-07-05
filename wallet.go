@@ -32,8 +32,8 @@ import (
 	"strings"
 
 	"github.com/ipfn/go-ipfn-cmd-util/logger"
-	"github.com/ipfn/ipfn/go/keypair"
-	"github.com/ipfn/ipfn/go/store"
+	"github.com/ipfn/go-ipfn-keypair"
+	"github.com/ipfn/go-ipfn-store"
 )
 
 // Wallet - Storage based key wallet.
@@ -76,6 +76,9 @@ func (w *Wallet) DeriveKey(path *KeyPath, password []byte) (_ *keypair.KeyPair, 
 	if err != nil {
 		return nil, fmt.Errorf("wallet: %v", err)
 	}
+	if !path.HasPath() {
+		return master, nil
+	}
 	return master.DerivePath(path.DerivationPath)
 }
 
@@ -86,25 +89,6 @@ func (w *Wallet) DeriveKeyPath(src string, password []byte) (_ *keypair.KeyPair,
 		return
 	}
 	return w.DeriveKey(path, password)
-}
-
-// CreateAccount - Creates new account.
-func (w *Wallet) CreateAccount(acc *Account, password []byte) (key *keypair.KeyPair, err error) {
-	// key, err = w.DeriveKey(path, []byte(password))
-	// if err != nil {
-	// 	return
-	// }
-	// cid, err := key.Cid()
-	// if err != nil {
-	// 	return
-	// }
-	// // TODO: validate all keys can be derived
-	// // >
-	// err = w.store.Put(accountKey(name), &Account{
-	// 	Name:    name,
-	// 	Address: cid.String(),
-	// })
-	return
 }
 
 // CreateSeed - Creates new wallet key seed.

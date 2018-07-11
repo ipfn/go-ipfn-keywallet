@@ -30,6 +30,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 
 	"github.com/ipfn/go-ipfn-cmd-util/logger"
 	"github.com/ipfn/go-ipfn-keypair"
@@ -39,11 +40,18 @@ import (
 // Wallet - Storage based key wallet.
 type Wallet struct {
 	store store.EncodedStore
+
+	mutex    *sync.RWMutex
+	unlocked map[string]*keypair.KeyPair
 }
 
 // New - Creates new key wallet using storage.
 func New(store store.EncodedStore) *Wallet {
-	return &Wallet{store: store}
+	return &Wallet{
+		store:    store,
+		mutex:    new(sync.RWMutex),
+		unlocked: make(map[string]*keypair.KeyPair),
+	}
 }
 
 // NewDefault - Creates new default wallet.
@@ -128,6 +136,56 @@ func (w *Wallet) ExportKey(name string) (key keypair.EncryptedSeed, err error) {
 		return
 	}
 	return key, nil
+}
+
+// Unlock - Unlocks master key.
+func (w *Wallet) Unlock(name string, password []byte) (key *keypair.KeyPair, err error) {
+	if w.IsUnlocked(name) {
+		return nil, fmt.Errorf("wallet %q already unlocked", err)
+	}
+	seed, err := w.ExportKey(name)
+	if err != nil {
+		return
+	}
+	key, err = seed.ToKeyPair(password)
+	if err != nil {
+		return
+	}
+	w.mutex.Lock()
+	w.unlocked[name] = key
+	w.mutex.Unlock()
+	return
+}
+
+// UnlockedKey - Returns key if unlocked otherwise returns an error.
+func (w *Wallet) UnlockedKey(name string) (key *keypair.KeyPair, err error) {
+	w.mutex.RLock()
+	key = w.unlocked[name]
+	w.mutex.RUnlock()
+	if key == nil {
+		return nil, fmt.Errorf("wallet %q is locked or not found", err)
+	}
+	return
+}
+
+// UnlockedDerive - Derives key from unlocked wallet.
+func (w *Wallet) UnlockedDerive(path *KeyPath) (key *keypair.KeyPair, err error) {
+	key, err = w.UnlockedKey(path.SeedName)
+	if err != nil {
+		return nil, fmt.Errorf("wallet: %v", err)
+	}
+	if path.DerivationPath != "" {
+		key, err = key.DerivePath(path.DerivationPath)
+	}
+	return
+}
+
+// IsUnlocked - Returns true is key under name is unlocked.
+func (w *Wallet) IsUnlocked(name string) bool {
+	w.mutex.RLock()
+	found := w.unlocked[name] != nil
+	w.mutex.RUnlock()
+	return found
 }
 
 func (w *Wallet) prefixKeys(prefix string) (keys []string, err error) {

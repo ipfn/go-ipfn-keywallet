@@ -24,9 +24,6 @@ import (
 
 // KeyPath - Wallet key path.
 type KeyPath struct {
-	// Address - Public account address.
-	Address string `json:"address,omitempty"`
-
 	// SeedName - Name of the master key.
 	SeedName string `json:"seed_name,omitempty"`
 
@@ -49,6 +46,15 @@ func ParseKeyPath(key string) (_ *KeyPath, err error) {
 		return
 	}
 	return &KeyPath{SeedName: seed, DerivationPath: path}, nil
+}
+
+// MustParseKeyPath - Parses key path, returns seed name and path. Panics on error.
+func MustParseKeyPath(key string) *KeyPath {
+	keyPath, err := ParseKeyPath(key)
+	if err != nil {
+		panic(err)
+	}
+	return keyPath
 }
 
 // UnpackPath - Unpacks derivation path.

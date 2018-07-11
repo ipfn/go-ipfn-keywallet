@@ -33,28 +33,38 @@ func PromptDeriveKey(path *KeyPath) (_ *keypair.KeyPair, err error) {
 	if !has {
 		return nil, fmt.Errorf("%q wallet does not exist", path.SeedName)
 	}
-	password, err := PromptWalletPassword(path.SeedName)
+	password, err := PromptPassword(w, path.SeedName)
 	if err != nil {
 		return
 	}
 	return w.DeriveKey(path, []byte(password))
 }
 
-// PromptWalletPassword - Prompts for wallet password after checking for its existence.
-func PromptWalletPassword(name string) (_ []byte, err error) {
-	// Check if key exists in default wallet
-	has, err := NewDefault().KeyExists(name)
+// PromptPassword - Prompts for wallet password after checking for its existence.
+func PromptPassword(w *Wallet, name string) (_ []byte, err error) {
+	has, err := w.KeyExists(name)
 	if err != nil {
 		return
 	}
 	if !has {
 		return nil, fmt.Errorf("%q wallet does not exist", name)
 	}
-
-	// Get wallet password
 	password := prompt.PasswordMasked(fmt.Sprintf("Wallet %q password", name))
 	if password == "" {
 		return nil, errors.New("failed to get decryption password")
 	}
 	return []byte(password), nil
+}
+
+// PromptUnlock - Prompts for wallet password after checking for its existence.
+func PromptUnlock(w *Wallet, name string) (key *keypair.KeyPair, err error) {
+	if key, err := w.UnlockedKey(name); err == nil {
+		return key, nil
+	}
+	password, err := PromptPassword(w, name)
+	if err != nil {
+		return
+	}
+	key, err = w.Unlock(name, []byte(password))
+	return
 }

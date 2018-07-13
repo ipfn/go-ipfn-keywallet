@@ -212,8 +212,8 @@ func accountKey(name string) string {
 
 var defaultWalletPath string
 
-// SetDefaultWalletPath - Sets default wallet path.
-func SetDefaultWalletPath(dest string) (err error) {
+// SetDefaultPath - Sets default wallet path.
+func SetDefaultPath(dest string) (err error) {
 	_, err = os.Stat(dest)
 	if os.IsNotExist(err) {
 		err = os.MkdirAll(dest, 0666)
@@ -233,7 +233,7 @@ func init() {
 		env = "home"
 	}
 	if home := os.Getenv(env); home != "" {
-		err := SetDefaultWalletPath(filepath.Join(home, ".ipfn", "wallet"))
+		err := SetDefaultPath(filepath.Join(home, ".ipfn", "wallet"))
 		if err != nil && !os.IsPermission(err) {
 			logger.Error(err)
 		}

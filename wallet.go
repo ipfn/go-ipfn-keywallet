@@ -212,6 +212,11 @@ func accountKey(name string) string {
 
 var defaultWalletPath string
 
+// SetDefaultWalletPath - Sets default wallet path.
+func SetDefaultWalletPath(defaultPath string) {
+	defaultWalletPath = defaultPath
+}
+
 func init() {
 	env := "HOME"
 	if runtime.GOOS == "windows" {
